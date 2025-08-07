@@ -14,40 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      editing_sessions: {
+      chat_messages: {
         Row: {
-          cursor_position: number | null
-          file_id: string
+          content: string
+          created_at: string
           id: string
-          is_active: boolean | null
-          last_activity: string | null
-          selection_end: number | null
-          selection_start: number | null
-          user_id: string
+          is_ai: boolean | null
+          sender_id: string
+          workspace_id: string
         }
         Insert: {
-          cursor_position?: number | null
-          file_id: string
+          content: string
+          created_at?: string
           id?: string
-          is_active?: boolean | null
-          last_activity?: string | null
-          selection_end?: number | null
-          selection_start?: number | null
-          user_id: string
+          is_ai?: boolean | null
+          sender_id: string
+          workspace_id: string
         }
         Update: {
-          cursor_position?: number | null
-          file_id?: string
+          content?: string
+          created_at?: string
           id?: string
-          is_active?: boolean | null
-          last_activity?: string | null
-          selection_end?: number | null
-          selection_start?: number | null
-          user_id?: string
+          is_ai?: boolean | null
+          sender_id?: string
+          workspace_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "editing_sessions_file_id_fkey"
+            foreignKeyName: "chat_messages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaborators: {
+        Row: {
+          id: string
+          invited_at: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          id?: string
+          invited_at?: string
+          role?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          id?: string
+          invited_at?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborators_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      file_versions: {
+        Row: {
+          change_summary: string | null
+          content: string
+          created_at: string
+          created_by: string
+          file_id: string
+          id: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          file_id: string
+          id?: string
+          version_number: number
+        }
+        Update: {
+          change_summary?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          file_id?: string
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_versions_file_id_fkey"
             columns: ["file_id"]
             isOneToOne: false
             referencedRelation: "files"
@@ -58,119 +122,68 @@ export type Database = {
       files: {
         Row: {
           content: string | null
-          created_at: string | null
-          created_by: string | null
+          created_at: string
+          created_by: string
           file_type: string | null
           filename: string
           id: string
-          project_id: string | null
-          updated_at: string | null
+          updated_at: string
+          workspace_id: string
         }
         Insert: {
           content?: string | null
-          created_at?: string | null
-          created_by?: string | null
+          created_at?: string
+          created_by: string
           file_type?: string | null
           filename: string
           id?: string
-          project_id?: string | null
-          updated_at?: string | null
+          updated_at?: string
+          workspace_id: string
         }
         Update: {
           content?: string | null
-          created_at?: string | null
-          created_by?: string | null
+          created_at?: string
+          created_by?: string
           file_type?: string | null
           filename?: string
           id?: string
-          project_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          display_name: string | null
-          email: string
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          email: string
-          id: string
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          email?: string
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      project_collaborators: {
-        Row: {
-          id: string
-          invited_at: string | null
-          project_id: string
-          role: string | null
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          invited_at?: string | null
-          project_id: string
-          role?: string | null
-          user_id: string
-        }
-        Update: {
-          id?: string
-          invited_at?: string | null
-          project_id?: string
-          role?: string | null
-          user_id?: string
+          updated_at?: string
+          workspace_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_collaborators_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "files_workspace_id_fkey"
+            columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
       }
-      projects: {
+      workspaces: {
         Row: {
-          created_at: string | null
+          created_at: string
           description: string | null
           id: string
           name: string
           owner_id: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: string
           name: string
           owner_id: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: string
           name?: string
           owner_id?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
