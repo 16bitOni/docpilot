@@ -6,6 +6,7 @@ import MarkdownEditor from '@/components/MarkdownEditor';
 import ChatSidebar from '@/components/ChatSidebar';
 import { LogOut, Menu, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface Workspace {
   id: string;
@@ -53,7 +54,7 @@ const EditorView = () => {
             </Button>
           )}
           <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
-            ScribeCollab
+            DocPilot
           </h1>
         </div>
         
@@ -83,33 +84,84 @@ const EditorView = () => {
       </header>
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - File Explorer */}
-        <div className={`${
-          isMobile ? (sidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-80' : 'hidden') : 'w-80'
-        } ${isMobile ? 'lg:relative lg:block' : ''}`}>
-          <FileExplorer
-            selectedWorkspace={selectedWorkspace}
-            onWorkspaceSelect={setSelectedWorkspace}
-            selectedFile={selectedFile}
-            onFileSelect={setSelectedFile}
-          />
-        </div>
+      <div className="flex-1 overflow-hidden">
+        {isMobile ? (
+          // Mobile Layout (non-resizable)
+          <div className="flex h-full">
+            {/* Left Sidebar - File Explorer */}
+            <div className={`${
+              sidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-80' : 'hidden'
+            } lg:relative lg:block lg:w-80`}>
+              <FileExplorer
+                selectedWorkspace={selectedWorkspace}
+                onWorkspaceSelect={setSelectedWorkspace}
+                selectedFile={selectedFile}
+                onFileSelect={setSelectedFile}
+              />
+            </div>
 
-        {/* Main Editor */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <MarkdownEditor
-            file={selectedFile}
-            onFileUpdate={handleFileUpdate}
-          />
-        </div>
+            {/* Main Editor */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <MarkdownEditor
+                file={selectedFile}
+                onFileUpdate={handleFileUpdate}
+              />
+            </div>
 
-        {/* Right Sidebar - Chat */}
-        <div className={`${
-          isMobile ? (chatOpen ? 'fixed inset-y-0 right-0 z-50 w-80' : 'hidden') : 'w-80'
-        } ${isMobile ? 'lg:relative lg:block' : ''}`}>
-          <ChatSidebar workspaceId={selectedWorkspace?.id || null} />
-        </div>
+            {/* Right Sidebar - Chat */}
+            <div className={`${
+              chatOpen ? 'fixed inset-y-0 right-0 z-50 w-80' : 'hidden'
+            } lg:relative lg:block lg:w-80`}>
+              <ChatSidebar workspaceId={selectedWorkspace?.id || null} activeFile={selectedFile} />
+            </div>
+          </div>
+        ) : (
+          // Desktop Layout (resizable)
+          <PanelGroup direction="horizontal" className="h-full">
+            {/* Left Panel - File Explorer */}
+            <Panel 
+              defaultSize={20} 
+              minSize={15} 
+              maxSize={40}
+              className="bg-editor-sidebar"
+            >
+              <FileExplorer
+                selectedWorkspace={selectedWorkspace}
+                onWorkspaceSelect={setSelectedWorkspace}
+                selectedFile={selectedFile}
+                onFileSelect={setSelectedFile}
+              />
+            </Panel>
+
+            {/* Resize Handle */}
+            <PanelResizeHandle className="w-1 bg-editor-border hover:bg-primary/50 transition-colors" />
+
+            {/* Center Panel - Main Editor */}
+            <Panel 
+              defaultSize={55} 
+              minSize={30}
+              className="bg-editor-background"
+            >
+              <MarkdownEditor
+                file={selectedFile}
+                onFileUpdate={handleFileUpdate}
+              />
+            </Panel>
+
+            {/* Resize Handle */}
+            <PanelResizeHandle className="w-1 bg-editor-border hover:bg-primary/50 transition-colors" />
+
+            {/* Right Panel - Chat */}
+            <Panel 
+              defaultSize={25} 
+              minSize={15} 
+              maxSize={40}
+              className="bg-editor-sidebar"
+            >
+              <ChatSidebar workspaceId={selectedWorkspace?.id || null} activeFile={selectedFile} />
+            </Panel>
+          </PanelGroup>
+        )}
       </div>
 
       {/* Mobile Overlays */}
