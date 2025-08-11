@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadFile, indexDocuments, getIndexingStatus } from '@/services/pythonApi';
 import { deleteFile } from '@/services/fileService';
+import { deleteWorkspace } from '@/services/workspaceService';
 import WorkspaceManagement from '@/components/WorkspaceManagement';
 import PendingInvitations from '@/components/PendingInvitations';
 import {
@@ -491,6 +492,49 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  // Handle workspace deletion
+  const handleDeleteWorkspace = async (workspace: Workspace, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent workspace selection when clicking delete
+
+    if (!user) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(`Are you sure you want to delete the workspace "${workspace.name}"? This will permanently delete all files, chat messages, and collaborators. This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      const result = await deleteWorkspace(workspace.id, user.id);
+
+      if (result.success) {
+        toast({
+          title: "Workspace deleted",
+          description: result.message
+        });
+
+        // Clear selected workspace if it was the one being deleted
+        if (selectedWorkspace?.id === workspace.id) {
+          onWorkspaceSelect(null);
+        }
+
+        // Refresh the workspaces list
+        await fetchWorkspaces();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Delete failed",
+          description: result.message
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Delete failed",
+        description: "An unexpected error occurred while deleting the workspace."
+      });
+      console.error('Delete workspace error:', error);
+    }
+  };
+
   const filteredFiles = files.filter(file =>
     file.filename.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -591,7 +635,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                         <Edit className="h-4 w-4 mr-2" />
                         Rename
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onClick={(e) => handleDeleteWorkspace(workspace, e)}
+                      >
                         <Trash className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>

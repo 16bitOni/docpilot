@@ -46,7 +46,22 @@ export const deleteFile = async (fileId: string, workspaceId: string, userId: st
       };
     }
 
-    // Delete the file
+    // Delete file versions first (to avoid foreign key constraint)
+    console.log('Deleting file versions first...');
+    const { error: versionsError } = await supabase
+      .from('file_versions')
+      .delete()
+      .eq('file_id', fileId);
+
+    if (versionsError) {
+      console.error('Error deleting file versions:', versionsError);
+      return {
+        success: false,
+        message: `Failed to delete file versions: ${versionsError.message}`
+      };
+    }
+
+    // Now delete the file
     console.log('Attempting to delete file from database...');
     const { data, error } = await supabase
       .from('files')
