@@ -46,9 +46,20 @@ const InvitePage: React.FC = () => {
     const [accepting, setAccepting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Debug logging
+    useEffect(() => {
+        console.log('InvitePage mounted with token:', token);
+        console.log('Current URL:', window.location.href);
+    }, []);
+
     useEffect(() => {
         if (token) {
+            console.log('Fetching invitation for token:', token);
             fetchInvitation();
+        } else {
+            console.log('No token found in URL params');
+            setError('Invalid invitation link - no token found.');
+            setLoading(false);
         }
     }, [token]);
 

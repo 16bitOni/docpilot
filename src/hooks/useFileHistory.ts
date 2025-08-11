@@ -98,19 +98,28 @@ export const useFileHistory = ({ fileId }: UseFileHistoryProps) => {
     if (!fileId || !userId) return;
 
     try {
-      const versionNumber = Math.floor(Date.now() / 1000);
+      // Generate unique version number using timestamp + random component
+      const timestamp = Date.now();
+      const randomComponent = Math.floor(Math.random() * 1000);
+      const uniqueVersionNumber = timestamp * 1000 + randomComponent;
 
       const { error } = await supabase
         .from('file_versions')
         .insert([{
           file_id: fileId,
           content,
-          version_number: versionNumber,
+          version_number: uniqueVersionNumber,
           created_by: userId
         }]);
 
       if (error) {
         console.error('Error creating version:', error);
+        console.error('Version data that failed:', {
+          file_id: fileId,
+          version_number: uniqueVersionNumber,
+          created_by: userId,
+          content_length: content.length
+        });
         return;
       }
 
@@ -152,6 +161,52 @@ export const useFileHistory = ({ fileId }: UseFileHistoryProps) => {
     if (fileId) {
       fetchVersions();
     }
+  }, [fileId]);
+
+  // Set up real-time subscription for file versions
+  useEffect(() => {
+    if (!fileId) return;
+
+    console.log('Setting up file_versions subscription for file:', fileId);
+
+    const channel = supabase
+      .channel(`file-versions-${fileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'file_versions',
+          filter: `file_id=eq.${fileId}`
+        },
+        (payload) => {
+          console.log('New file version detected:', payload);
+          // Refresh versions when a new version is created
+          fetchVersions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'file_versions',
+          filter: `file_id=eq.${fileId}`
+        },
+        (payload) => {
+          console.log('File version deleted:', payload);
+          // Refresh versions when versions are deleted
+          fetchVersions();
+        }
+      )
+      .subscribe((status) => {
+        console.log('File versions subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up file_versions subscription');
+      supabase.removeChannel(channel);
+    };
   }, [fileId]);
 
   return {

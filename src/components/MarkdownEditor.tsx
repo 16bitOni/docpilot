@@ -198,13 +198,34 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ file, onFileUpdate }) =
         setHasExternalChanges(false);
       }
 
-      // Create version entry silently
-      await supabase.from('file_versions').insert([{
-        file_id: file.id,
-        content: saveContent,
-        version_number: Math.floor(Date.now() / 1000),
-        created_by: user.id
-      }]);
+      // Create version entry with error handling
+      try {
+        // Generate unique version number using timestamp + random component
+        const timestamp = Date.now();
+        const randomComponent = Math.floor(Math.random() * 1000);
+        const uniqueVersionNumber = timestamp * 1000 + randomComponent;
+
+        const { data: versionData, error: versionError } = await supabase.from('file_versions').insert([{
+          file_id: file.id,
+          content: saveContent,
+          version_number: uniqueVersionNumber,
+          created_by: user.id
+        }]).select().single();
+
+        if (versionError) {
+          console.error('Error creating file version:', versionError);
+          console.error('Version data that failed:', {
+            file_id: file.id,
+            version_number: uniqueVersionNumber,
+            created_by: user.id,
+            content_length: saveContent.length
+          });
+        } else {
+          console.log('File version created successfully:', versionData);
+        }
+      } catch (versionCreateError) {
+        console.error('Exception creating file version:', versionCreateError);
+      }
     }
   };
 
