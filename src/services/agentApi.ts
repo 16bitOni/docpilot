@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-const PYTHON_API_BASE_URL = 'http://localhost:8000';
+const PYTHON_API_BASE_URL = 'https://docpilot-backend.onrender.com';
 
 // Helper function to get the JWT token from Supabase
 const getAuthToken = async (): Promise<string | null> => {
